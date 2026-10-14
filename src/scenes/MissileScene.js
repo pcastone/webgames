@@ -47,7 +47,7 @@ export default class MissileScene extends Phaser.Scene {
     this.updateHud();
 
     const hint = this.add
-      .text(W / 2, 250, 'Type the answer and press FIRE\nto stop the missile!', {
+      .text(W / 2, 250, 'Type the answer on the keyboard\nand press Enter to fire!', {
         fontFamily: FONT,
         fontSize: '40px',
         color: '#ffffff',
@@ -85,32 +85,34 @@ export default class MissileScene extends Phaser.Scene {
 
   // ---- Answer entry -------------------------------------------------------
 
+  /** Answer box plus ⌫ and FIRE; the digits come from the real keyboard. */
   makeKeypad() {
-    const y = 662;
-    this.add.graphics().setDepth(300).fillStyle(0xffffff, 1).fillRoundedRect(30, y - 38, 160, 76, 18);
+    const y = 660;
+    this.add.graphics().setDepth(300).fillStyle(0xffffff, 1).fillRoundedRect(W / 2 - 110, y - 42, 220, 84, 20);
     this.answerText = this.add
-      .text(110, y + 2, '?', { fontFamily: FONT, fontSize: '52px', color: '#b0b0c0', fontStyle: 'bold' })
+      .text(W / 2, y + 2, '?', { fontFamily: FONT, fontSize: '60px', color: '#b0b0c0', fontStyle: 'bold' })
       .setOrigin(0.5)
       .setDepth(301);
+    this.add
+      .text(W / 2 - 140, y, 'Type the answer ⌨️', { fontFamily: FONT, fontSize: '30px', color: '#ffffff', fontStyle: 'bold' })
+      .setOrigin(1, 0.5)
+      .setDepth(300);
 
-    const keys = [...'0123456789', '⌫', 'FIRE'];
-    let x = 215;
-    for (const k of keys) {
-      const w = k === 'FIRE' ? 170 : 68;
-      const color = k === 'FIRE' ? COLORS.orange : k === '⌫' ? COLORS.pink : COLORS.blue;
-      const c = this.add.container(x + w / 2, y, [
-        this.add.graphics().fillStyle(0x000000, 0.25).fillRoundedRect(-w / 2 + 2, -34 + 5, w, 68, 16),
-        this.add.graphics().fillStyle(color, 1).fillRoundedRect(-w / 2, -34, w, 68, 16),
-        this.add
-          .text(0, 2, k === 'FIRE' ? 'FIRE 🚀' : k, { fontFamily: FONT, fontSize: k === 'FIRE' ? '32px' : '40px', color: '#ffffff', fontStyle: 'bold' })
-          .setOrigin(0.5),
+    const keys = [
+      { k: '⌫', label: '⌫', w: 90, color: COLORS.pink, x: W / 2 + 175 },
+      { k: 'FIRE', label: 'FIRE 🚀', w: 190, color: COLORS.orange, x: W / 2 + 335 },
+    ];
+    for (const { k, label, w, color, x } of keys) {
+      const c = this.add.container(x, y, [
+        this.add.graphics().fillStyle(0x000000, 0.25).fillRoundedRect(-w / 2 + 2, -36 + 5, w, 72, 16),
+        this.add.graphics().fillStyle(color, 1).fillRoundedRect(-w / 2, -36, w, 72, 16),
+        this.add.text(0, 2, label, { fontFamily: FONT, fontSize: '34px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5),
       ]);
-      c.setDepth(300).setSize(w, 68).setInteractive({ useHandCursor: true });
+      c.setDepth(300).setSize(w, 72).setInteractive({ useHandCursor: true });
       c.on('pointerdown', () => {
         this.tweens.add({ targets: c, scale: 0.88, yoyo: true, duration: 70 });
         this.press(k);
       });
-      x += w + 8;
     }
   }
 
