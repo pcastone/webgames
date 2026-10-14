@@ -8,7 +8,6 @@ import { getSpellingWords } from '../spelling.js';
 const GAMES = [
   { key: 'Missile', name: 'Missile Math', icon: '🚀', color: COLORS.blue },
   { key: 'Dragon', name: 'Dragon Care', icon: '🐉', color: COLORS.orange },
-  { key: 'Memory', name: 'Memory Match', icon: '🐶', color: COLORS.purple },
   { key: 'Balloon', name: 'Balloon Math', icon: '🎈', color: COLORS.pink },
   { key: 'Word', name: 'Word Catcher', icon: '🔤', color: COLORS.green },
 ];
@@ -39,7 +38,7 @@ export default class MenuScene extends Phaser.Scene {
       .text(W / 2, 205, 'Pick a game to play', { fontFamily: FONT, fontSize: '34px', color: COLORS.ink })
       .setOrigin(0.5);
 
-    GAMES.forEach((game, i) => this.makeTile(W / 2 + (i - (GAMES.length - 1) / 2) * 248, 430, game));
+    GAMES.forEach((game, i) => this.makeTile(W / 2 + (i - (GAMES.length - 1) / 2) * 280, 430, game));
 
     this.playerChip(player);
     iconButton(this, W - 140, 52, '💼', () => this.scene.start('Words'));
@@ -79,7 +78,7 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   makeTile(x, y, { key, name, icon, color }) {
-    const size = 230;
+    const size = 250;
     const c = this.add.container(x, y);
     const shadow = this.add.graphics().fillStyle(0x000000, 0.18).fillRoundedRect(-size / 2 + 6, -size / 2 + 10, size, size, 40);
     const bg = this.add.graphics().fillStyle(color, 1).fillRoundedRect(-size / 2, -size / 2, size, size, 40);
