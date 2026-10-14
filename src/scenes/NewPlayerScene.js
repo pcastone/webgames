@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, FONT, COLORS } from '../theme.js';
 import { drawBackground, iconButton, makeButton } from '../ui.js';
 import { sfx, speak } from '../sound.js';
-import { addPlayer, getPlayers, setCurrentPlayer } from '../storage.js';
+import { addPlayer, getPlayers, setCurrentPlayer, updatePlayer } from '../storage.js';
 
 const ICONS = ['🦄', '🐶', '🐱', '🦊', '🐼', '🐸', '🐵', '🦁', '🐯', '🐰', '🐨', '🐙', '🦖', '🐝', '🐢', '🐧'];
 const KEY_ROWS = ['ABCDEFGHI', 'JKLMNOPQR', 'STUVWXYZ⌫'];
@@ -11,20 +11,28 @@ const KEY = 70;
 const KEY_GAP = 10;
 const KB_X = 500; // keyboard center; the Done button sits to its right
 
-/** Make a player: type a name with the big ABC keyboard and pick an icon. */
+/**
+ * Make a player (or edit one, when started with { player, returnTo }): type a
+ * name with the big ABC keyboard and pick an icon.
+ */
 export default class NewPlayerScene extends Phaser.Scene {
   constructor() {
     super('NewPlayer');
   }
 
+  init(data) {
+    this.editing = data?.player ?? null;
+    this.returnTo = data?.returnTo ?? 'Players';
+  }
+
   create() {
     drawBackground(this, { grass: false });
-    this.name = '';
-    this.icon = Phaser.Utils.Array.GetRandom(ICONS);
+    this.name = this.editing ? this.editing.name.toUpperCase() : '';
+    this.icon = this.editing?.icon ?? Phaser.Utils.Array.GetRandom(ICONS);
 
-    if (getPlayers().length > 0) iconButton(this, 56, 52, '⬅️', () => this.scene.start('Players'));
+    if (this.editing || getPlayers().length > 0) iconButton(this, 56, 52, '⬅️', () => this.scene.start(this.returnTo));
     this.add
-      .text(W / 2, 52, 'Make your player!', { fontFamily: FONT, fontSize: '54px', color: COLORS.ink, fontStyle: 'bold' })
+      .text(W / 2, 52, this.editing ? 'Change your player' : 'Make your player!', { fontFamily: FONT, fontSize: '54px', color: COLORS.ink, fontStyle: 'bold' })
       .setOrigin(0.5);
 
     // Preview card: chosen icon + name typed so far.
@@ -50,7 +58,7 @@ export default class NewPlayerScene extends Phaser.Scene {
     });
 
     this.refresh();
-    speak('Make your player! Type your name and pick a picture.');
+    if (!this.editing) speak('Make your player! Type your name and pick a picture.');
   }
 
   makeIconPicker() {
@@ -133,9 +141,14 @@ export default class NewPlayerScene extends Phaser.Scene {
       speak('Type your name first');
       return;
     }
+    sfx.correct();
+    if (this.editing) {
+      const player = updatePlayer(this.editing.id, { name: this.displayName(), icon: this.icon });
+      speak(`Hi ${player.name}!`);
+      return this.scene.start(this.returnTo);
+    }
     const player = addPlayer(this.displayName(), this.icon);
     setCurrentPlayer(player);
-    sfx.correct();
     speak(`Hi ${player.name}!`);
     this.scene.start('Menu');
   }

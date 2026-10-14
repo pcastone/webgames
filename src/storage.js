@@ -34,6 +34,13 @@ export function addPlayer(name, icon) {
   return player;
 }
 
+export function updatePlayer(id, changes) {
+  const players = getPlayers().map((p) => (p.id === id ? { ...p, ...changes } : p));
+  save('players', players);
+  if (current?.id === id) current = { ...current, ...changes };
+  return players.find((p) => p.id === id);
+}
+
 const bestKey = (game) => `best.${current?.id ?? 'guest'}.${game}`;
 
 export const getBest = (game) => load(bestKey(game), 0);

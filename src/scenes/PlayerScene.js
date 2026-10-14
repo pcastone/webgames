@@ -8,6 +8,7 @@ const TILE_W = 200;
 const TILE_H = 210;
 const GAP = 28;
 const PER_ROW = 5;
+const STRIP_TOP = 42; // y (from tile center) where the name strip starts
 
 /** Opening screen: pick who is playing, or make a new player. */
 export default class PlayerScene extends Phaser.Scene {
@@ -48,32 +49,49 @@ export default class PlayerScene extends Phaser.Scene {
 
   makeTile(x, y, item, i) {
     const c = this.add.container(x, y);
-    const textColor = item.add ? COLORS.ink : '#ffffff';
     c.add([
       this.add.graphics().fillStyle(0x000000, 0.18).fillRoundedRect(-TILE_W / 2 + 5, -TILE_H / 2 + 9, TILE_W, TILE_H, 34),
       this.add.graphics().fillStyle(item.color, item.add ? 0.85 : 1).fillRoundedRect(-TILE_W / 2, -TILE_H / 2, TILE_W, TILE_H, 34),
       this.add.text(0, -28, item.icon, { fontFamily: FONT, fontSize: item.add ? '72px' : '96px' }).setOrigin(0.5),
-      this.add
-        .text(0, 70, item.name, {
-          fontFamily: FONT,
-          fontSize: item.add ? '28px' : '34px',
-          color: textColor,
-          fontStyle: 'bold',
-        })
-        .setOrigin(0.5),
     ]);
-    c.setSize(TILE_W, TILE_H).setInteractive({ useHandCursor: true });
-    c.on('pointerover', () => this.tweens.add({ targets: c, scale: 1.06, duration: 100 }));
-    c.on('pointerout', () => this.tweens.add({ targets: c, scale: 1, duration: 100 }));
-    c.on('pointerup', () => {
-      sfx.click();
-      if (item.add) return this.scene.start('NewPlayer');
-      setCurrentPlayer({ id: item.id, name: item.name, icon: item.icon });
-      speak(`Hi ${item.name}!`);
-      this.scene.start('Menu');
-    });
+    const hover = (scale) => () => this.tweens.add({ targets: c, scale, duration: 100 });
+
+    if (item.add) {
+      c.add(this.add.text(0, 70, item.name, { fontFamily: FONT, fontSize: '28px', color: COLORS.ink, fontStyle: 'bold' }).setOrigin(0.5));
+      this.tapArea(c, 0, 0, TILE_W, TILE_H, hover, () => this.scene.start('NewPlayer'));
+    } else {
+      // Bottom strip holds the name and edits the player; the rest of the tile picks it.
+      c.add(
+        this.add.graphics().fillStyle(0x000000, 0.16).fillRoundedRect(-TILE_W / 2, STRIP_TOP, TILE_W, TILE_H / 2 - STRIP_TOP, { tl: 0, tr: 0, bl: 34, br: 34 }),
+      );
+      const label = this.add
+        .text(0, (STRIP_TOP + TILE_H / 2) / 2, `${item.name} ✏️`, { fontFamily: FONT, fontSize: '30px', color: '#ffffff', fontStyle: 'bold' })
+        .setOrigin(0.5);
+      label.setScale(Math.min(1, (TILE_W - 20) / label.width));
+      c.add(label);
+      const player = { id: item.id, name: item.name, icon: item.icon };
+      this.tapArea(c, 0, (STRIP_TOP - TILE_H / 2) / 2, TILE_W, STRIP_TOP + TILE_H / 2, hover, () => {
+        setCurrentPlayer(player);
+        speak(`Hi ${item.name}!`);
+        this.scene.start('Menu');
+      });
+      this.tapArea(c, 0, (STRIP_TOP + TILE_H / 2) / 2, TILE_W, TILE_H / 2 - STRIP_TOP, hover, () =>
+        this.scene.start('NewPlayer', { player, returnTo: 'Players' }),
+      );
+    }
 
     c.setScale(0);
     this.tweens.add({ targets: c, scale: 1, delay: i * 60, duration: 260, ease: 'Back.easeOut' });
+  }
+
+  tapArea(container, x, y, w, h, hover, onTap) {
+    const zone = this.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
+    zone.on('pointerover', hover(1.06));
+    zone.on('pointerout', hover(1));
+    zone.on('pointerup', () => {
+      sfx.click();
+      onTap();
+    });
+    container.add(zone);
   }
 }

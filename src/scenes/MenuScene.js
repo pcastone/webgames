@@ -42,10 +42,11 @@ export default class MenuScene extends Phaser.Scene {
     iconButton(this, W - 56, 52, isMuted() ? '🔇' : '🔊', (txt) => txt.setText(toggleMute() ? '🔇' : '🔊'));
   }
 
-  /** Shows who is playing; tap to switch player. */
-  playerChip({ name, icon }) {
+  /** Shows who is playing: tap the chip to edit, the 👥 button to switch. */
+  playerChip(player) {
+    const { name, icon } = player;
     const label = this.add
-      .text(0, 0, name, { fontFamily: FONT, fontSize: '32px', color: COLORS.ink, fontStyle: 'bold' })
+      .text(0, 0, `${name} ✏️`, { fontFamily: FONT, fontSize: '32px', color: COLORS.ink, fontStyle: 'bold' })
       .setOrigin(0, 0.5);
     const w = 84 + label.width + 26;
     label.setX(84 - w / 2);
@@ -57,8 +58,9 @@ export default class MenuScene extends Phaser.Scene {
     c.setSize(w, 72).setInteractive({ useHandCursor: true });
     c.on('pointerup', () => {
       sfx.click();
-      this.scene.start('Players');
+      this.scene.start('NewPlayer', { player, returnTo: 'Menu' });
     });
+    iconButton(this, 20 + w + 50, 52, '👥', () => this.scene.start('Players'));
   }
 
   makeTile(x, y, { key, name, icon, color }) {
