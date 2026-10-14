@@ -5,11 +5,16 @@ import { load, save } from './storage.js';
 let ctx = null;
 let muted = load('muted', false);
 
+function audio() {
+  ctx ||= new (window.AudioContext || window.webkitAudioContext)();
+  if (ctx.state === 'suspended') ctx.resume();
+  return ctx;
+}
+
 function tone(freq, dur, { type = 'sine', when = 0, vol = 0.18, slideTo = null } = {}) {
   if (muted) return;
   try {
-    ctx ||= new (window.AudioContext || window.webkitAudioContext)();
-    if (ctx.state === 'suspended') ctx.resume();
+    audio();
     const t = ctx.currentTime + when;
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
@@ -41,6 +46,92 @@ export const sfx = {
   boom: () => tone(140, 0.45, { type: 'sawtooth', slideTo: 35, vol: 0.2 }),
   win: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.18, { when: i * 0.12 })),
 };
+
+/** Filtered white noise burst (tyre screech, whoosh). */
+function noise(dur, { freq = 2500, q = 6, vol = 0.25, slideTo = null } = {}) {
+  if (muted) return;
+  try {
+    const c = audio();
+    const buf = c.createBuffer(1, Math.ceil(c.sampleRate * dur), c.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    const src = c.createBufferSource();
+    src.buffer = buf;
+    const filter = c.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.Q.value = q;
+    const t = c.currentTime;
+    filter.frequency.setValueAtTime(freq, t);
+    if (slideTo) filter.frequency.exponentialRampToValueAtTime(slideTo, t + dur);
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    src.connect(filter).connect(gain).connect(c.destination);
+    src.start(t);
+  } catch {
+    /* audio unavailable */
+  }
+}
+
+Object.assign(sfx, {
+  brake: () => {
+    noise(0.45, { freq: 3200, q: 9, vol: 0.3, slideTo: 1800 });
+    tone(1500, 0.35, { type: 'sawtooth', slideTo: 900, vol: 0.03 });
+  },
+  rev: () => {
+    tone(110, 0.18, { type: 'sawtooth', slideTo: 420, vol: 0.12 });
+    tone(420, 0.35, { type: 'sawtooth', when: 0.18, slideTo: 160, vol: 0.1 });
+  },
+  beep: (high = false) => tone(high ? 880 : 440, high ? 0.5 : 0.25, { type: 'square', vol: 0.08 }),
+});
+
+/**
+ * Continuous engine hum; set(0..1) moves pitch and loudness with speed.
+ * Always stop() it when the scene ends.
+ */
+export function engine() {
+  if (muted) return { set() {}, stop() {} };
+  try {
+    const c = audio();
+    const t = c.currentTime;
+    const a = c.createOscillator();
+    const b = c.createOscillator();
+    a.type = b.type = 'sawtooth';
+    const filter = c.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 700;
+    const gain = c.createGain();
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.exponentialRampToValueAtTime(0.035, t + 0.5);
+    a.connect(filter);
+    b.connect(filter);
+    filter.connect(gain).connect(c.destination);
+    a.start();
+    b.start();
+    const set = (v) => {
+      const now = c.currentTime;
+      a.frequency.setTargetAtTime(55 + v * 140, now, 0.15);
+      b.frequency.setTargetAtTime(56.5 + v * 143, now, 0.15);
+      filter.frequency.setTargetAtTime(500 + v * 1400, now, 0.15);
+      gain.gain.setTargetAtTime(0.03 + v * 0.03, now, 0.2);
+    };
+    set(0);
+    let stopped = false;
+    return {
+      set: (v) => !stopped && set(v),
+      stop() {
+        if (stopped) return;
+        stopped = true;
+        const now = c.currentTime;
+        gain.gain.setTargetAtTime(0.0001, now, 0.1);
+        a.stop(now + 0.5);
+        b.stop(now + 0.5);
+      },
+    };
+  } catch {
+    return { set() {}, stop() {} };
+  }
+}
 
 export function speak(text) {
   if (muted || !('speechSynthesis' in window)) return;

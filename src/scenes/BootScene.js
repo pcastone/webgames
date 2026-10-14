@@ -79,6 +79,20 @@ export default class BootScene extends Phaser.Scene {
     g.clear().fillStyle(0xffffff, 1).fillCircle(64, 64, 64);
     g.generateTexture('boom', 128, 128);
 
+    // Race car, top-down, nose to the right. Body is white so it can be
+    // tinted; wheels and cockpit are dark so they stay dark.
+    g.clear();
+    g.fillStyle(0x222222, 1);
+    for (const [x, y] of [[16, 0], [16, 46], [78, 2], [78, 44]]) g.fillRoundedRect(x, y, 24, 14, 4);
+    g.fillStyle(0xffffff, 1);
+    g.fillRoundedRect(8, 10, 96, 40, 16); // body
+    g.fillTriangle(100, 16, 100, 44, 124, 30); // nose
+    g.fillRect(0, 6, 10, 48); // rear wing
+    g.fillRect(112, 12, 8, 36); // front wing
+    g.fillStyle(0x333a4a, 1).fillEllipse(62, 30, 34, 22); // cockpit
+    g.fillStyle(0xdddddd, 1).fillRect(20, 27, 30, 6); // stripe
+    g.generateTexture('car', 126, 60);
+
     g.destroy();
     this.scene.start('Players');
   }

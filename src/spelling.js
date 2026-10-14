@@ -31,3 +31,21 @@ export function pickSpellingWords(n, filter = () => true) {
   while (out.length < n) out.push(...Phaser.Utils.Array.Shuffle([...list]));
   return out.slice(0, n);
 }
+
+// ---- Race sentences (Grand Prix) ------------------------------------------
+
+export const MAX_SENTENCE = 80;
+
+/** One sentence per line; tidy spaces and curly quotes; 3–80 characters. */
+export function parseSentences(text) {
+  const lines = text
+    .replace(/[’‘]/g, "'")
+    .replace(/[“”]/g, '"')
+    .split(/\r?\n/)
+    .map((l) => l.replace(/^\s*\d+[.)]\s*/, '').replace(/\s+/g, ' ').trim())
+    .filter((l) => l.length >= 3 && l.length <= MAX_SENTENCE && /\p{L}/u.test(l));
+  return [...new Set(lines)];
+}
+
+export const getRaceSentences = () => load('sentences', []);
+export const saveRaceSentences = (lines) => save('sentences', lines);
