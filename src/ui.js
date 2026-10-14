@@ -121,7 +121,7 @@ export function starsText(n) {
 }
 
 /** End-of-game panel: stars, best score, play again / menu. */
-export function showResult(scene, game, stars) {
+export function showResult(scene, game, stars, extra = '') {
   const best = recordBest(game, stars);
   const message = ['Good try!', 'Good try!', 'Great job!', 'Amazing!'][stars];
   sfx.win();
@@ -144,9 +144,14 @@ export function showResult(scene, game, stars) {
     scene.tweens.add({ targets: s, scale: 1.4, delay: 250 + i * 250, duration: 300, ease: 'Back.easeOut' });
   }
   const bestText = scene.add
-    .text(W / 2, H / 2 + 60, `Best: ${starsText(best)}`, { fontFamily: FONT, fontSize: '34px', color: '#f4a300' })
+    .text(W / 2, H / 2 + (extra ? 45 : 60), `Best: ${starsText(best)}`, { fontFamily: FONT, fontSize: '34px', color: '#f4a300' })
     .setOrigin(0.5);
   layer.add(bestText);
+  if (extra) {
+    layer.add(
+      scene.add.text(W / 2, H / 2 + 88, extra, { fontFamily: FONT, fontSize: '28px', color: '#2ec4b6', fontStyle: 'bold' }).setOrigin(0.5),
+    );
+  }
   layer.add(makeButton(scene, W / 2 - 160, H / 2 + 155, 'Play again', () => scene.scene.restart(), { color: COLORS.green }));
   layer.add(makeButton(scene, W / 2 + 160, H / 2 + 155, 'Menu', () => scene.scene.start('Menu'), { color: COLORS.purple }));
 

@@ -41,6 +41,10 @@ export function updatePlayer(id, changes) {
   return players.find((p) => p.id === id);
 }
 
+/** Per-player data for the current player (e.g. how much their dragon ate). */
+export const loadPlayerData = (key, fallback) => load(`${key}.${current?.id ?? 'guest'}`, fallback);
+export const savePlayerData = (key, value) => save(`${key}.${current?.id ?? 'guest'}`, value);
+
 const bestKey = (game) => `best.${current?.id ?? 'guest'}.${game}`;
 
 export const getBest = (game) => load(bestKey(game), 0);

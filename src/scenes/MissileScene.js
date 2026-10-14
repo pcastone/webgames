@@ -309,7 +309,7 @@ export default class MissileScene extends Phaser.Scene {
     if (this.done) return;
     this.done = true;
     this.answer.blur();
-    this.answer.disabled = true;
+    this.answer.style.display = 'none'; // DOM sits above the canvas; keep it off the results panel
     for (const m of [...this.missiles]) this.removeMissile(m);
     for (const s of [...this.shots]) this.removeShot(s);
     const stars = this.bases.filter((b) => b.alive).length;
