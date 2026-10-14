@@ -18,7 +18,7 @@ export default class PlayerScene extends Phaser.Scene {
 
   create() {
     const players = getPlayers();
-    if (players.length === 0) return this.scene.start('NewPlayer');
+    if (players.length === 0) return this.scene.start('NewPlayer', { player: null });
 
     drawBackground(this);
     this.add
@@ -58,7 +58,7 @@ export default class PlayerScene extends Phaser.Scene {
 
     if (item.add) {
       c.add(this.add.text(0, 70, item.name, { fontFamily: FONT, fontSize: '28px', color: COLORS.ink, fontStyle: 'bold' }).setOrigin(0.5));
-      this.tapArea(c, 0, 0, TILE_W, TILE_H, hover, () => this.scene.start('NewPlayer'));
+      this.tapArea(c, 0, 0, TILE_W, TILE_H, hover, () => this.scene.start('NewPlayer', { player: null }));
     } else {
       // Bottom strip holds the name and edits the player; the rest of the tile picks it.
       c.add(

@@ -16,6 +16,8 @@ export default class NewPlayerScene extends Phaser.Scene {
     super('NewPlayer');
   }
 
+  // Callers always pass data: Phaser reuses the previous start's data when
+  // none is given, which would reopen the last edited player.
   init(data) {
     this.editing = data?.player ?? null;
     this.returnTo = data?.returnTo ?? 'Players';
