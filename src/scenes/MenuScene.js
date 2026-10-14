@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { W, FONT, COLORS } from '../theme.js';
 import { drawBackground, iconButton, starsText } from '../ui.js';
 import { sfx, isMuted, toggleMute } from '../sound.js';
-import { getBest } from '../storage.js';
+import { getBest, getCurrentPlayer } from '../storage.js';
 
 const GAMES = [
   { key: 'Memory', name: 'Memory Match', icon: '🐶', color: COLORS.purple },
@@ -16,6 +16,8 @@ export default class MenuScene extends Phaser.Scene {
   }
 
   create() {
+    const player = getCurrentPlayer();
+    if (!player) return this.scene.start('Players');
     drawBackground(this);
 
     const title = this.add
@@ -36,7 +38,27 @@ export default class MenuScene extends Phaser.Scene {
 
     GAMES.forEach((game, i) => this.makeTile(W / 2 + (i - 1) * 370, 430, game));
 
+    this.playerChip(player);
     iconButton(this, W - 56, 52, isMuted() ? '🔇' : '🔊', (txt) => txt.setText(toggleMute() ? '🔇' : '🔊'));
+  }
+
+  /** Shows who is playing; tap to switch player. */
+  playerChip({ name, icon }) {
+    const label = this.add
+      .text(0, 0, name, { fontFamily: FONT, fontSize: '32px', color: COLORS.ink, fontStyle: 'bold' })
+      .setOrigin(0, 0.5);
+    const w = 84 + label.width + 26;
+    label.setX(84 - w / 2);
+    const c = this.add.container(20 + w / 2, 52, [
+      this.add.graphics().fillStyle(0xffffff, 0.9).fillRoundedRect(-w / 2, -36, w, 72, 36),
+      this.add.text(40 - w / 2, 2, icon, { fontFamily: FONT, fontSize: '46px' }).setOrigin(0.5),
+      label,
+    ]);
+    c.setSize(w, 72).setInteractive({ useHandCursor: true });
+    c.on('pointerup', () => {
+      sfx.click();
+      this.scene.start('Players');
+    });
   }
 
   makeTile(x, y, { key, name, icon, color }) {

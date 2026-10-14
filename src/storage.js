@@ -19,11 +19,28 @@ export function save(key, value) {
   }
 }
 
-export const getBest = (game) => load(`best.${game}`, 0);
+// Players: { id, name, icon }. The current player lives in memory only, so
+// the opening screen always asks who is playing.
+export const MAX_PLAYERS = 9;
+let current = null;
 
-/** Records stars if they beat the previous best; returns the best. */
+export const getPlayers = () => load('players', []);
+export const getCurrentPlayer = () => current;
+export const setCurrentPlayer = (player) => (current = player);
+
+export function addPlayer(name, icon) {
+  const player = { id: Date.now().toString(36), name, icon };
+  save('players', [...getPlayers(), player]);
+  return player;
+}
+
+const bestKey = (game) => `best.${current?.id ?? 'guest'}.${game}`;
+
+export const getBest = (game) => load(bestKey(game), 0);
+
+/** Records stars if they beat the current player's best; returns the best. */
 export function recordBest(game, stars) {
   const best = Math.max(getBest(game), stars);
-  save(`best.${game}`, best);
+  save(bestKey(game), best);
   return best;
 }
