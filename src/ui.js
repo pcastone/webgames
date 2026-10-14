@@ -48,6 +48,40 @@ export function makeButton(scene, x, y, label, onClick, { w = 300, h = 90, color
   return c;
 }
 
+/**
+ * A real <input> placed in the game at (x, y), in game units. Using a DOM
+ * field (not drawn text) is what opens the virtual keyboard on tablets.
+ */
+export function textInput(scene, x, y, { width, height, fontSize, placeholder = '', maxLength, numeric = false, value = '' }) {
+  const el = document.createElement('input');
+  Object.assign(el, { type: 'text', value, placeholder, maxLength, autocomplete: 'off', spellcheck: false });
+  el.setAttribute('autocorrect', 'off');
+  el.setAttribute('enterkeyhint', 'go');
+  if (numeric) {
+    el.inputMode = 'numeric';
+    el.pattern = '[0-9]*';
+  }
+  Object.assign(el.style, {
+    width: `${width}px`,
+    height: `${height}px`,
+    boxSizing: 'border-box',
+    padding: '0 16px',
+    border: 'none',
+    borderRadius: '20px',
+    outline: 'none',
+    background: '#ffffff',
+    color: COLORS.ink,
+    caretColor: '#ff5d8f',
+    fontFamily: FONT,
+    fontSize: `${fontSize}px`,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  });
+  scene.add.dom(x, y, el).setDepth(600);
+  scene.time.delayedCall(60, () => el.focus());
+  return el;
+}
+
 /** Round icon button (home, speaker, mute). */
 export function iconButton(scene, x, y, icon, onClick) {
   const c = scene.add.container(x, y).setDepth(500);

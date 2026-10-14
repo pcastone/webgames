@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { W, H, FONT, COLORS } from '../theme.js';
-import { homeButton, showResult } from '../ui.js';
+import { homeButton, showResult, textInput } from '../ui.js';
 import { sfx } from '../sound.js';
 import { makeQuestion } from '../mathq.js';
 
@@ -29,7 +29,6 @@ export default class MissileScene extends Phaser.Scene {
     this.shots = [];
     this.spawned = 0;
     this.hits = 0;
-    this.typed = '';
     this.done = false;
 
     this.trails = this.add.graphics().setDepth(10);
@@ -59,11 +58,6 @@ export default class MissileScene extends Phaser.Scene {
     this.tweens.add({ targets: hint, alpha: 0, delay: 4000, duration: 800, onComplete: () => hint.destroy() });
 
     this.makeKeypad();
-    this.input.keyboard?.on('keydown', (e) => {
-      if (/^[0-9]$/.test(e.key)) this.press(e.key);
-      else if (e.key === 'Backspace') this.press('⌫');
-      else if (e.key === 'Enter' || e.key === ' ') this.press('FIRE');
-    });
 
     this.time.delayedCall(1200, () => this.spawnLoop());
   }
@@ -88,11 +82,19 @@ export default class MissileScene extends Phaser.Scene {
   /** Answer box plus ⌫ and FIRE; the digits come from the real keyboard. */
   makeKeypad() {
     const y = 660;
-    this.add.graphics().setDepth(300).fillStyle(0xffffff, 1).fillRoundedRect(W / 2 - 110, y - 42, 220, 84, 20);
-    this.answerText = this.add
-      .text(W / 2, y + 2, '?', { fontFamily: FONT, fontSize: '60px', color: '#b0b0c0', fontStyle: 'bold' })
-      .setOrigin(0.5)
-      .setDepth(301);
+    this.answer = textInput(this, W / 2, y, { width: 220, height: 84, fontSize: 60, placeholder: '?', maxLength: MAX_DIGITS, numeric: true });
+    this.answer.addEventListener('input', () => {
+      this.answer.value = this.answer.value.replace(/\D/g, '').slice(0, MAX_DIGITS);
+      sfx.click();
+    });
+    this.answer.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        this.fire();
+      }
+    });
+    // Taps on the game keep the field focused so the keyboard stays up.
+    this.input.on('pointerup', () => !this.done && this.answer.focus());
     this.add
       .text(W / 2 - 140, y, 'Type the answer ⌨️', { fontFamily: FONT, fontSize: '30px', color: '#ffffff', fontStyle: 'bold' })
       .setOrigin(1, 0.5)
@@ -119,18 +121,17 @@ export default class MissileScene extends Phaser.Scene {
   press(k) {
     if (this.done) return;
     if (k === 'FIRE') return this.fire();
-    if (k === '⌫') this.typed = this.typed.slice(0, -1);
-    else if (this.typed.length < MAX_DIGITS) this.typed += k;
-    else return sfx.wrong();
+    this.answer.value = this.answer.value.slice(0, -1);
     sfx.click();
-    this.answerText.setText(this.typed || '?').setColor(this.typed ? COLORS.ink : '#b0b0c0');
+    this.answer.focus();
   }
 
   fire() {
-    if (!this.typed) return sfx.wrong();
-    const value = Number(this.typed);
-    this.typed = '';
-    this.answerText.setText('?').setColor('#b0b0c0');
+    if (this.done) return;
+    this.answer.focus();
+    if (!this.answer.value) return sfx.wrong();
+    const value = Number(this.answer.value);
+    this.answer.value = '';
 
     const target = this.missiles.find((m) => !m.targeted && m.q.answer === value);
     const alive = this.bases.filter((b) => b.alive);
@@ -307,6 +308,8 @@ export default class MissileScene extends Phaser.Scene {
   finish() {
     if (this.done) return;
     this.done = true;
+    this.answer.blur();
+    this.answer.disabled = true;
     for (const m of [...this.missiles]) this.removeMissile(m);
     for (const s of [...this.shots]) this.removeShot(s);
     const stars = this.bases.filter((b) => b.alive).length;

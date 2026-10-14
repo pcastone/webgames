@@ -19,6 +19,9 @@ const game = new Phaser.Game({
     width: W,
     height: H,
   },
+  // DOM container lets scenes place real <input> fields, which bring up a
+  // tablet's on-screen keyboard.
+  dom: { createContainer: true },
   scene: [BootScene, PlayerScene, NewPlayerScene, MenuScene, MissileScene, MemoryScene, BalloonScene, WordScene],
 });
 
