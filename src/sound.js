@@ -37,6 +37,8 @@ export const sfx = {
     tone(659, 0.12, { when: 0.1 });
     tone(784, 0.22, { when: 0.2 });
   },
+  launch: () => tone(300, 0.3, { type: 'triangle', slideTo: 1000, vol: 0.12 }),
+  boom: () => tone(140, 0.45, { type: 'sawtooth', slideTo: 35, vol: 0.2 }),
   win: () => [523, 659, 784, 1046, 784, 1046].forEach((f, i) => tone(f, 0.18, { when: i * 0.12 })),
 };
 

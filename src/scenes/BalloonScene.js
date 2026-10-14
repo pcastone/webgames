@@ -2,27 +2,10 @@ import Phaser from 'phaser';
 import { W, H, FONT, COLORS, PALETTE, pick } from '../theme.js';
 import { drawBackground, homeButton, iconButton, praise, showResult } from '../ui.js';
 import { sfx, speak } from '../sound.js';
+import { makeQuestion } from '../mathq.js';
 
 const ROUNDS = 10;
 const MAX_BALLOONS = 7;
-
-function makeQuestion(round) {
-  const { Between } = Phaser.Math;
-  // First half: sums to 10. Second half: add or subtract within 20.
-  if (round < ROUNDS / 2) {
-    const a = Between(1, 9);
-    const b = Between(1, 10 - a);
-    return { a, b, op: '+', answer: a + b };
-  }
-  if (Math.random() < 0.5) {
-    const a = Between(2, 15);
-    const b = Between(1, 20 - a);
-    return { a, b, op: '+', answer: a + b };
-  }
-  const a = Between(5, 20);
-  const b = Between(1, a);
-  return { a, b, op: '−', answer: a - b };
-}
 
 export default class BalloonScene extends Phaser.Scene {
   constructor() {
@@ -78,7 +61,7 @@ export default class BalloonScene extends Phaser.Scene {
 
   nextQuestion() {
     if (this.round >= ROUNDS) return this.finish();
-    this.q = makeQuestion(this.round);
+    this.q = makeQuestion(this.round >= ROUNDS / 2);
     this.qText.setText(`${this.q.a} ${this.q.op} ${this.q.b} = ?`).setScale(0.6);
     this.tweens.add({ targets: this.qText, scale: 1, duration: 300, ease: 'Back.easeOut' });
     this.sayQuestion();

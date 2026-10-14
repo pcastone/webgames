@@ -59,6 +59,26 @@ export default class BootScene extends Phaser.Scene {
     g.fillStyle(0xd98b3a, 1).fillRoundedRect(0, 10, 180, 18, 9);
     g.generateTexture('basket', 180, 100);
 
+    // Missile, nose up (white so it can be tinted).
+    g.clear().fillStyle(0xffffff, 1);
+    g.fillTriangle(12, 0, 3, 16, 21, 16);
+    g.fillRect(5, 15, 14, 30);
+    g.fillTriangle(5, 34, 5, 50, -2 + 2, 50).fillTriangle(0, 50, 5, 36, 5, 50);
+    g.fillTriangle(19, 36, 19, 50, 24, 50);
+    g.fillStyle(0xbbbbbb, 1).fillRect(5, 22, 14, 4);
+    g.generateTexture('missile', 24, 52);
+
+    // Base: dome with a cannon, cropped so only the top half of the circle shows.
+    g.clear().fillStyle(0xffffff, 1);
+    g.fillRect(64, 0, 12, 36);
+    g.fillCircle(70, 72, 48);
+    g.fillStyle(0xcccccc, 1).fillRect(8, 62, 124, 10);
+    g.generateTexture('base', 140, 72);
+
+    // Explosion disc.
+    g.clear().fillStyle(0xffffff, 1).fillCircle(64, 64, 64);
+    g.generateTexture('boom', 128, 128);
+
     g.destroy();
     this.scene.start('Players');
   }

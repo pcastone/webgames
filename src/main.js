@@ -4,6 +4,7 @@ import BootScene from './scenes/BootScene.js';
 import PlayerScene from './scenes/PlayerScene.js';
 import NewPlayerScene from './scenes/NewPlayerScene.js';
 import MenuScene from './scenes/MenuScene.js';
+import MissileScene from './scenes/MissileScene.js';
 import MemoryScene from './scenes/MemoryScene.js';
 import BalloonScene from './scenes/BalloonScene.js';
 import WordScene from './scenes/WordScene.js';
@@ -18,7 +19,7 @@ const game = new Phaser.Game({
     width: W,
     height: H,
   },
-  scene: [BootScene, PlayerScene, NewPlayerScene, MenuScene, MemoryScene, BalloonScene, WordScene],
+  scene: [BootScene, PlayerScene, NewPlayerScene, MenuScene, MissileScene, MemoryScene, BalloonScene, WordScene],
 });
 
 // Handy for poking at scenes from the console during development.
