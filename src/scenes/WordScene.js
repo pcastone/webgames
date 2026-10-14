@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { W, H, FONT, COLORS, PALETTE, pick } from '../theme.js';
 import { drawBackground, homeButton, iconButton, praise, showResult } from '../ui.js';
 import { sfx, speak } from '../sound.js';
+import { pickSpellingWords } from '../spelling.js';
 
 const WORDS = [
   ['CAT', '🐱'], ['DOG', '🐶'], ['SUN', '☀️'], ['BUS', '🚌'], ['BEE', '🐝'], ['HAT', '🎩'],
@@ -24,10 +25,16 @@ export default class WordScene extends Phaser.Scene {
     homeButton(this);
     iconButton(this, W - 56, 52, '🔈', () => this.sayWord());
 
-    // Mix short and longer words, easiest first.
-    this.words = Phaser.Utils.Array.Shuffle([...WORDS])
-      .slice(0, WORDS_PER_GAME)
-      .sort((a, b) => a[0].length - b[0].length);
+    // The parent's spelling list (A–Z words only, since letters fall from
+    // A–Z) wins; otherwise built-in words, short ones first.
+    const custom = pickSpellingWords(WORDS_PER_GAME, (w) => /^[A-Z]+$/.test(w));
+    this.words = custom.length
+      ? custom.map((w) => [w, '📝'])
+      : Phaser.Utils.Array.Shuffle([...WORDS])
+          .slice(0, WORDS_PER_GAME)
+          .sort((a, b) => a[0].length - b[0].length);
+    // Cursor keys capture Space/arrows for the whole page; release them on exit.
+    this.events.once('shutdown', () => this.input.keyboard?.clearCaptures());
     this.wordIndex = 0;
     this.mistakes = 0;
     this.letters = [];
@@ -77,7 +84,8 @@ export default class WordScene extends Phaser.Scene {
 
     this.header?.destroy();
     const n = word.length;
-    const total = n * SLOT_W + (n - 1) * SLOT_GAP;
+    this.slotW = Math.min(SLOT_W, Math.floor((760 - (n - 1) * SLOT_GAP) / n)); // long words shrink
+    const total = n * this.slotW + (n - 1) * SLOT_GAP;
     this.header = this.add.container(W / 2 + 50, 95).setDepth(300);
     const panelW = total + 160;
     this.header.add(
@@ -86,10 +94,10 @@ export default class WordScene extends Phaser.Scene {
     this.emoji = this.add.text(-total / 2 - 70, 0, emoji, { fontFamily: FONT, fontSize: '84px' }).setOrigin(0.5);
     this.header.add(this.emoji);
     this.slots = [...word].map((ch, i) => {
-      const x = -total / 2 + SLOT_W / 2 + i * (SLOT_W + SLOT_GAP);
+      const x = -total / 2 + this.slotW / 2 + i * (this.slotW + SLOT_GAP);
       const box = this.add.graphics();
       const txt = this.add
-        .text(x, 2, ch, { fontFamily: FONT, fontSize: '58px', color: '#c9c9d6', fontStyle: 'bold' })
+        .text(x, 2, ch, { fontFamily: FONT, fontSize: `${Math.round(this.slotW * 0.8)}px`, color: '#c9c9d6', fontStyle: 'bold' })
         .setOrigin(0.5);
       this.header.add([box, txt]);
       return { x, box, txt };
@@ -106,8 +114,8 @@ export default class WordScene extends Phaser.Scene {
     this.slots.forEach(({ x, box }, i) => {
       box.clear();
       box.fillStyle(i < this.pos ? COLORS.green : 0xf1f1f6, 1);
-      box.fillRoundedRect(x - SLOT_W / 2, -44, SLOT_W, 88, 16);
-      if (i === this.pos) box.lineStyle(5, COLORS.orange, 1).strokeRoundedRect(x - SLOT_W / 2, -44, SLOT_W, 88, 16);
+      box.fillRoundedRect(x - this.slotW / 2, -44, this.slotW, 88, 16);
+      if (i === this.pos) box.lineStyle(5, COLORS.orange, 1).strokeRoundedRect(x - this.slotW / 2, -44, this.slotW, 88, 16);
     });
   }
 

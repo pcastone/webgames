@@ -3,6 +3,7 @@ import { W, FONT, COLORS } from '../theme.js';
 import { drawBackground, iconButton, starsText } from '../ui.js';
 import { sfx, isMuted, toggleMute } from '../sound.js';
 import { getBest, getCurrentPlayer } from '../storage.js';
+import { getSpellingWords } from '../spelling.js';
 
 const GAMES = [
   { key: 'Missile', name: 'Missile Math', icon: '🚀', color: COLORS.blue },
@@ -41,6 +42,18 @@ export default class MenuScene extends Phaser.Scene {
     GAMES.forEach((game, i) => this.makeTile(W / 2 + (i - (GAMES.length - 1) / 2) * 248, 430, game));
 
     this.playerChip(player);
+    iconButton(this, W - 140, 52, '💼', () => this.scene.start('Words'));
+    const words = getSpellingWords().length;
+    const listNote = this.add
+      .text(W / 2, 640, words ? `📝 Spelling list: ${words} word${words === 1 ? '' : 's'}` : '💼 Add spelling words for Dragon Care and Word Catcher', {
+        fontFamily: FONT,
+        fontSize: '28px',
+        color: COLORS.ink,
+        fontStyle: 'bold',
+      })
+      .setOrigin(0.5)
+      .setInteractive({ useHandCursor: true });
+    listNote.on('pointerup', () => this.scene.start('Words'));
     iconButton(this, W - 56, 52, isMuted() ? '🔇' : '🔊', (txt) => txt.setText(toggleMute() ? '🔇' : '🔊'));
   }
 

@@ -3,6 +3,7 @@ import { W, H, FONT, COLORS } from '../theme.js';
 import { homeButton, iconButton, showResult, textInput } from '../ui.js';
 import { sfx, speak, isMuted } from '../sound.js';
 import { loadPlayerData, savePlayerData } from '../storage.js';
+import { pickSpellingWords } from '../spelling.js';
 import DRAGON from '../dragon-layout.json';
 
 // Words to copy, grouped by length so the dragon's level sets the challenge.
@@ -22,6 +23,8 @@ const TORCHES = [{ x: 823, y: 140 }, { x: 1222, y: 50 }];
 
 const levelFor = (fed) => Math.min(MAX_LEVEL, 1 + Math.floor(fed / FOODS_PER_LEVEL));
 const maxLetters = (level) => (level === 1 ? 4 : level === 2 ? 5 : 6);
+/** A stable food picture for a spelling word, so "friend" is always the same treat. */
+const foodFor = (word) => FOODS[[...word].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7) % FOODS.length][1];
 
 /**
  * Dragon Care: copy-type the food's name to feed the baby dragon. Fill its
@@ -62,8 +65,14 @@ export default class DragonScene extends Phaser.Scene {
     this.makeWordPanel();
     homeButton(this);
 
-    const pool = FOODS.filter(([w]) => w.length <= maxLetters(this.level));
-    this.words = Phaser.Utils.Array.Shuffle([...pool]).slice(0, TUMMY);
+    // The parent's spelling list wins; otherwise food words sized to the level.
+    const custom = pickSpellingWords(TUMMY);
+    if (custom.length) {
+      this.words = custom.map((w) => [w, foodFor(w)]);
+    } else {
+      const pool = FOODS.filter(([w]) => w.length <= maxLetters(this.level));
+      this.words = Phaser.Utils.Array.Shuffle([...pool]).slice(0, TUMMY);
+    }
     this.time.delayedCall(400, () => this.nextWord());
   }
 
@@ -191,15 +200,18 @@ export default class DragonScene extends Phaser.Scene {
     this.foodIcon.setText(this.emoji).setScale(0.3);
     this.tweens.add({ targets: this.foodIcon, scale: 1, duration: 300, ease: 'Back.easeOut' });
     this.letters.removeAll(true);
-    const step = 58;
+    // Long spelling words shrink to fit the panel.
+    const step = Math.min(58, 520 / this.word.length);
+    const size = Math.round(Math.min(64, step * 1.1));
     [...this.word].forEach((ch, i) => {
       this.letters.add(
         this.add
-          .text((i - (this.word.length - 1) / 2) * step, 0, ch, { fontFamily: FONT, fontSize: '64px', color: COLORS.ink, fontStyle: 'bold' })
+          .text((i - (this.word.length - 1) / 2) * step, 0, ch, { fontFamily: FONT, fontSize: `${size}px`, color: COLORS.ink, fontStyle: 'bold' })
           .setOrigin(0.5),
       );
     });
     this.field.value = '';
+    this.field.maxLength = this.word.length + 2;
     this.lastLength = 0;
     this.field.focus();
     speak(this.word.toLowerCase());
@@ -212,7 +224,7 @@ export default class DragonScene extends Phaser.Scene {
       this.field.value = '';
       return;
     }
-    const typed = this.field.value.toUpperCase().replace(/[^A-Z]/g, '');
+    const typed = this.field.value.toUpperCase().replace(/[’‘]/g, "'").replace(/[^\p{L}']/gu, '');
     this.field.value = typed;
     let ok = 0;
     while (ok < typed.length && typed[ok] === this.word[ok]) ok++;

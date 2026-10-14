@@ -6,6 +6,7 @@ import NewPlayerScene from './scenes/NewPlayerScene.js';
 import MenuScene from './scenes/MenuScene.js';
 import MissileScene from './scenes/MissileScene.js';
 import DragonScene from './scenes/DragonScene.js';
+import WordsScene from './scenes/WordsScene.js';
 import MemoryScene from './scenes/MemoryScene.js';
 import BalloonScene from './scenes/BalloonScene.js';
 import WordScene from './scenes/WordScene.js';
@@ -23,7 +24,7 @@ const game = new Phaser.Game({
   // DOM container lets scenes place real <input> fields, which bring up a
   // tablet's on-screen keyboard.
   dom: { createContainer: true },
-  scene: [BootScene, PlayerScene, NewPlayerScene, MenuScene, MissileScene, DragonScene, MemoryScene, BalloonScene, WordScene],
+  scene: [BootScene, PlayerScene, NewPlayerScene, MenuScene, MissileScene, DragonScene, MemoryScene, BalloonScene, WordScene, WordsScene],
 });
 
 // Handy for poking at scenes from the console during development.
