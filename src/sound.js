@@ -187,7 +187,7 @@ export function speak(text) {
     const u = new SpeechSynthesisUtterance(text);
     if (voice) u.voice = voice;
     u.lang = voice?.lang ?? 'en-US';
-    u.rate = 0.9;
+    u.rate = 0.75; // slower than normal speech so young spellers can catch every sound
     u.pitch = 1; // pitching up makes voices sound more synthetic
     window.speechSynthesis.speak(u);
   } catch {
