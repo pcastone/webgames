@@ -151,13 +151,44 @@ export function engine() {
   }
 }
 
+// Novelty and low-quality voices that ship with some systems.
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|deranged|good news|hysterical|jester|organ|superstar|trinoids|whisper|wobble|zarvox|pipe organ|espeak|compact/i;
+
+/** Higher is more natural-sounding. */
+function voiceScore(v) {
+  let s = 0;
+  if (/^en[-_]US/i.test(v.lang)) s += 30;
+  else if (/^en/i.test(v.lang)) s += 20;
+  else return -1;
+  if (NOVELTY.test(v.name)) return -1;
+  if (/natural|neural/i.test(v.name)) s += 50; // Edge / Windows online voices
+  if (/premium|enhanced|siri/i.test(v.name)) s += 45; // Apple downloaded voices
+  if (/google/i.test(v.name)) s += 35; // Chrome's cloud voices
+  if (/samantha|ava|allison|susan|zoe|karen|moira|serena|aria|jenny|guy/i.test(v.name)) s += 15;
+  if (v.default) s += 5;
+  return s;
+}
+
+let voice = null;
+function pickVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  voice = voices.reduce((best, v) => (voiceScore(v) > (best ? voiceScore(best) : -1) ? v : best), null);
+}
+if ('speechSynthesis' in window) {
+  pickVoice();
+  // Many browsers load the voice list after startup.
+  window.speechSynthesis.addEventListener?.('voiceschanged', pickVoice);
+}
+
 export function speak(text) {
   if (muted || !('speechSynthesis' in window)) return;
   try {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
+    if (voice) u.voice = voice;
+    u.lang = voice?.lang ?? 'en-US';
     u.rate = 0.9;
-    u.pitch = 1.15;
+    u.pitch = 1; // pitching up makes voices sound more synthetic
     window.speechSynthesis.speak(u);
   } catch {
     /* speech unavailable */
