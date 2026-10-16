@@ -9,7 +9,7 @@ import {
 const TABS = {
   words: {
     label: 'Spelling words',
-    games: 'Dragon Care and Word Catcher',
+    games: 'Dragon Care, Word Catcher and Frog Hop',
     placeholder: 'One word per line, or separated by commas\n\napple\nfriend\nbecause',
     rule: `Letters only, 2–${MAX_WORD} letters per word.`,
     parse: parseWords,

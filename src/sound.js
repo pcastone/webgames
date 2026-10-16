@@ -82,6 +82,24 @@ Object.assign(sfx, {
     tone(110, 0.18, { type: 'sawtooth', slideTo: 420, vol: 0.12 });
     tone(420, 0.35, { type: 'sawtooth', when: 0.18, slideTo: 160, vol: 0.1 });
   },
+  hop: () => tone(380, 0.14, { type: 'triangle', slideTo: 900, vol: 0.14 }),
+  honk: () => {
+    tone(392, 0.18, { type: 'square', vol: 0.07 });
+    tone(330, 0.3, { type: 'square', when: 0.2, vol: 0.07 });
+  },
+  splat: () => noise(0.25, { freq: 400, q: 1, vol: 0.4, slideTo: 120 }),
+  splash: () => {
+    noise(0.6, { freq: 1200, q: 0.8, vol: 0.35, slideTo: 300 });
+    tone(700, 0.3, { type: 'sine', slideTo: 200, vol: 0.08 });
+  },
+  chomp: () => {
+    tone(160, 0.08, { type: 'square', vol: 0.12 });
+    tone(120, 0.1, { type: 'square', when: 0.12, vol: 0.12 });
+  },
+  horn: () => {
+    for (const f of [311, 392, 466]) tone(f, 0.9, { type: 'sawtooth', vol: 0.035 });
+  },
+  boing: () => tone(200, 0.5, { type: 'sine', slideTo: 900, vol: 0.12 }),
   beep: (high = false) => tone(high ? 880 : 440, high ? 0.5 : 0.25, { type: 'square', vol: 0.08 }),
 });
 

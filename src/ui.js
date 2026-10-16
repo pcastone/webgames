@@ -168,5 +168,8 @@ export function showResult(scene, game, stars, extra = '') {
       duration: 1800,
     })
     .setDepth(1001);
+  // Stay on screen in scenes whose camera scrolls (children too, for taps).
+  layer.setScrollFactor(0, 0, true);
+  confetti.setScrollFactor(0);
   return { layer, confetti };
 }
