@@ -14,12 +14,3 @@ npm install
 npm run dev      # http://localhost:5173
 npm run build    # static site in dist/
 ```
-
-## Deploy
-
-Pushes to `claude/charming-hopper-a2mjck` (or `main`) build and publish the site to GitHub Pages via `.github/workflows/deploy.yml`:
-https://pcastone.github.io/webgames/
-
-One-time setup: repo **Settings → Pages → Build and deployment → Source: GitHub Actions**.
-
-The build in `dist/` is plain static files and works from any subfolder, so it can also be copied to any web server.
