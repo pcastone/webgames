@@ -47,6 +47,12 @@ export default class FrogScene extends Phaser.Scene {
     this.frog = this.add.text(W / 2, this.safeY(0), '🐸', { fontSize: '64px' }).setOrigin(0.5).setDepth(50);
     this.tweens.add({ targets: this.frog, scaleY: 0.92, duration: 500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     this.spot = 0; // index into safe strips the frog is on
+    // Tap the frog to hear the word again.
+    this.frog.setInteractive({ useHandCursor: true }).on('pointerup', () => {
+      if (this.done || !this.word || this.frog.alpha === 0) return;
+      this.tweens.add({ targets: this.frog, angle: { from: -12, to: 12 }, duration: 80, yoyo: true, repeat: 1, onComplete: () => this.frog.setAngle(0) });
+      this.sayWord();
+    });
 
     const cam = this.cameras.main;
     cam.setBounds(0, 0, W, this.worldH + PANEL_H);
@@ -205,7 +211,7 @@ export default class FrogScene extends Phaser.Scene {
     ui(this.add.graphics().fillStyle(0xffffff, 1).fillRect(0, top, W, PANEL_H).fillStyle(0x2e8b3c, 1).fillRect(0, top, W, 6));
     ui(iconButton(this, 90, top + 70, '🔊', () => this.sayWord()));
     this.hint = ui(
-      this.add.text(W / 2, top + 135, 'Listen, then type the word and press Enter', { fontFamily: FONT, fontSize: '22px', color: '#6c6f85' }).setOrigin(0.5),
+      this.add.text(W / 2, top + 135, 'Listen (tap the frog to hear it again), then type the word and press Enter', { fontFamily: FONT, fontSize: '22px', color: '#6c6f85' }).setOrigin(0.5),
     );
     this.slots = ui(this.add.container(W / 2, top + 65));
     this.hopButton = ui(makeButton(this, W - 130, top + 70, 'Hop! 🐸', () => this.submit(), { w: 200, h: 84, color: COLORS.green, fontSize: 34 }));
@@ -256,7 +262,7 @@ export default class FrogScene extends Phaser.Scene {
     this.field.value = '';
     this.drawSlots([]);
     this.updateHud();
-    this.hint.setText('Listen, then type the word and press Enter');
+    this.hint.setText('Listen (tap the frog to hear it again), then type the word and press Enter');
     this.busy = false;
     this.field.focus();
     this.sayWord();
